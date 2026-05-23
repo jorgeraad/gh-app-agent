@@ -8,11 +8,11 @@
 #   - Branch deletion blocked (belt-and-suspenders; GitHub already blocks
 #     default-branch deletion platform-wide)
 #   - Optionally: at least 1 approving review (--require-approval). Repository
-#     admins are added as a PR-mode bypass actor, so YOU can still self-merge
-#     your own PRs without approval. The App cannot — GitHub forbids an App
-#     from approving its own PR, and the App is an Integration actor (not a
-#     RepositoryRole), so it isn't covered by the admin bypass. Net effect:
-#     you can merge, the agent cannot.
+#     admins are added as an "always" bypass actor, so YOU can push direct to
+#     main and self-merge PRs without approval. The App cannot — GitHub forbids
+#     an App from approving its own PR, and the App is an Integration actor
+#     (not a RepositoryRole), so it isn't covered by the admin bypass. Net
+#     effect: you keep zero friction, the agent is gated.
 #
 # Note: rulesets on PRIVATE repos under a personal account require GitHub Pro.
 # Public repos work for free. The script reports a clean SKIP for repos it
@@ -89,9 +89,10 @@ fi
 payload() {
   local bypass_actors='[]'
   if [ "$REQUIRE_APPROVAL" -eq 1 ]; then
-    # RepositoryRole 5 = Admin. bypass_mode "pull_request" means admins must
-    # still open a PR but can merge it without satisfying the approval rule.
-    bypass_actors='[{"actor_id":5,"actor_type":"RepositoryRole","bypass_mode":"pull_request"}]'
+    # RepositoryRole 5 = Admin. bypass_mode "always" lets admins push direct
+    # and self-merge PRs without approval. The App is an Integration actor,
+    # not RepositoryRole, so it isn't covered by this bypass.
+    bypass_actors='[{"actor_id":5,"actor_type":"RepositoryRole","bypass_mode":"always"}]'
   fi
   cat <<JSON
 {
