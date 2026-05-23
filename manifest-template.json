@@ -1,0 +1,17 @@
+{
+  "name": "{{NAME}}",
+  "url": "https://github.com/{{NAME}}",
+  "redirect_url": "http://localhost:{{PORT}}/callback",
+  "setup_url": "http://localhost:{{PORT}}/installed",
+  "setup_on_update": false,
+  "public": false,
+  "hook_attributes": {
+    "active": false
+  },
+  "default_permissions": {
+    "contents": "write",
+    "pull_requests": "write",
+    "metadata": "read"
+  },
+  "default_events": []
+}

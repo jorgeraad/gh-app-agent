@@ -1,0 +1,13 @@
+#!/bin/bash
+# gh-agent — thin wrapper around `gh` that injects a fresh installation token.
+#
+# Use it whenever you want gh to act as the App rather than your personal login:
+#   gh-agent pr create --draft --title "..." --body "..."
+#   gh-agent repo view owner/repo
+#
+# Anything you can pass to `gh`, you can pass here.
+
+set -eu
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TOKEN="$("$SCRIPT_DIR/mint-token.py")"
+exec env GH_TOKEN="$TOKEN" GITHUB_TOKEN="$TOKEN" gh "$@"

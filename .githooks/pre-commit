@@ -1,0 +1,53 @@
+#!/bin/bash
+# pre-commit — opt-in secret-blocking hook.
+#
+# Enable by running once in your clone:
+#   git config core.hooksPath .githooks
+#
+# Refuses to commit:
+#   - files named *.pem, config.env, .env
+#   - any staged content matching "BEGIN ... PRIVATE KEY" headers
+#   - any staged content matching GitHub token patterns (ghs_/ghp_/etc.)
+#
+# This is belt-and-suspenders on top of .gitignore. If you ever need to bypass
+# it intentionally, use: git commit --no-verify
+
+set -u
+FAIL=0
+
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  base="${f##*/}"
+  case "$f" in
+    *.pem)
+      echo "REJECT: '$f' looks like a private key (*.pem)." >&2
+      FAIL=1
+      ;;
+  esac
+  case "$base" in
+    config.env|.env)
+      echo "REJECT: '$f' is an env/config file that may contain secrets." >&2
+      FAIL=1
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=AM)
+
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  if git show ":$f" 2>/dev/null | grep -aEq 'BEGIN ([A-Z]+ )?PRIVATE KEY'; then
+    echo "REJECT: '$f' contains a PRIVATE KEY block." >&2
+    FAIL=1
+  fi
+  if git show ":$f" 2>/dev/null | grep -aEq '(ghs|ghp|gho|ghu|ghr)_[A-Za-z0-9]{30,}'; then
+    echo "REJECT: '$f' contains what looks like a GitHub token." >&2
+    FAIL=1
+  fi
+done < <(git diff --cached --name-only --diff-filter=AM)
+
+if [ "$FAIL" -ne 0 ]; then
+  echo "" >&2
+  echo "Commit blocked: secret-like content was about to be committed." >&2
+  echo "If you are sure this is a false positive, re-run with: git commit --no-verify" >&2
+  exit 1
+fi
+exit 0

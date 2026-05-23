@@ -1,0 +1,20 @@
+# Per-app config and secrets — never commit
+apps/*/
+!apps/.gitkeep
+
+# Python venv created during setup
+venv/
+
+# Belt-and-suspenders: secrets anywhere in the tree
+*.pem
+*.token-cache.json
+config.env
+.env
+
+# Editor / OS noise
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+.vscode/
+.idea/
