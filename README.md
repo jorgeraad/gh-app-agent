@@ -76,6 +76,17 @@ Finally — and this is the actual safety net, not just a nice-to-have — set b
 
 Without this, the App's `Contents: write` permission can technically push directly to `main`. With this, GitHub refuses the push regardless of who's pushing.
 
+To apply this baseline across many repos in one shot, use `bin/apply-baseline-protection.sh`. It creates a ruleset (idempotent, named `baseline-default-protection`) on each repo's default branch enforcing "PR required, no force pushes, no deletion". Pass `--require-approval` to also require one human approval before merge — useful as an extra brake, since GitHub forbids an App from approving its own PRs (so the agent can open PRs but not self-merge).
+
+```bash
+# Dry-run against your public repos:
+gh repo list --limit 200 --json name,visibility \
+    --jq '.[] | select(.visibility=="PUBLIC") | .name' \
+  | bin/apply-baseline-protection.sh --dry-run
+```
+
+Rulesets on private repos under a personal account require GitHub Pro; the script reports a clean SKIP for repos it can't touch.
+
 ## Verification
 
 Run these in order; each should succeed.
@@ -175,7 +186,8 @@ Worth being explicit:
 │   ├── register-app.py             # App Manifest flow driver
 │   ├── mint-token.py               # mints + caches installation tokens
 │   ├── git-credential-github-app   # git credential helper
-│   └── gh-agent                    # gh wrapper that injects GH_TOKEN
+│   ├── gh-agent                    # gh wrapper that injects GH_TOKEN
+│   └── apply-baseline-protection.sh # batch-apply default-branch rulesets
 ├── venv/                           # gitignored; created in setup step 2
 └── apps/                           # gitignored except .gitkeep
     ├── default -> <app-name>       # symlink; updated by register-app.py
