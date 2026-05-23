@@ -76,7 +76,7 @@ Finally — and this is the actual safety net, not just a nice-to-have — set b
 
 Without this, the App's `Contents: write` permission can technically push directly to `main`. With this, GitHub refuses the push regardless of who's pushing.
 
-To apply this baseline across many repos in one shot, use `bin/apply-baseline-protection.sh`. It creates a ruleset (idempotent, named `baseline-default-protection`) on each repo's default branch enforcing "PR required, no force pushes, no deletion". Pass `--require-approval` to also require one human approval before merge — useful as an extra brake, since GitHub forbids an App from approving its own PRs (so the agent can open PRs but not self-merge).
+To apply this baseline across many repos in one shot, use `bin/apply-baseline-protection.sh`. It creates a ruleset (idempotent, named `baseline-default-protection`) on each repo's default branch enforcing "PR required, no force pushes, no deletion". Pass `--require-approval` to also require one approving review before merge, with the **Repository Admin** role added as a PR-mode bypass actor — so you can still self-merge your own PRs, but the App cannot (it's an `Integration` actor, not covered by the admin bypass, and GitHub forbids it from approving its own PR).
 
 ```bash
 # Dry-run against your public repos:

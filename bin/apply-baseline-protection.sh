@@ -7,9 +7,12 @@
 #   - Force pushes blocked (non_fast_forward)
 #   - Branch deletion blocked (belt-and-suspenders; GitHub already blocks
 #     default-branch deletion platform-wide)
-#   - Optionally: at least 1 approving review (--require-approval). This
-#     prevents the gh-app-agent App from merging its own PRs, since GitHub
-#     forbids an App from approving a PR it authored.
+#   - Optionally: at least 1 approving review (--require-approval). Repository
+#     admins are added as a PR-mode bypass actor, so YOU can still self-merge
+#     your own PRs without approval. The App cannot — GitHub forbids an App
+#     from approving its own PR, and the App is an Integration actor (not a
+#     RepositoryRole), so it isn't covered by the admin bypass. Net effect:
+#     you can merge, the agent cannot.
 #
 # Note: rulesets on PRIVATE repos under a personal account require GitHub Pro.
 # Public repos work for free. The script reports a clean SKIP for repos it
@@ -84,11 +87,18 @@ if [ ${#REPOS[@]} -eq 0 ]; then
 fi
 
 payload() {
+  local bypass_actors='[]'
+  if [ "$REQUIRE_APPROVAL" -eq 1 ]; then
+    # RepositoryRole 5 = Admin. bypass_mode "pull_request" means admins must
+    # still open a PR but can merge it without satisfying the approval rule.
+    bypass_actors='[{"actor_id":5,"actor_type":"RepositoryRole","bypass_mode":"pull_request"}]'
+  fi
   cat <<JSON
 {
   "name": "${RULESET_NAME}",
   "target": "branch",
   "enforcement": "active",
+  "bypass_actors": ${bypass_actors},
   "conditions": {
     "ref_name": {
       "include": ["~DEFAULT_BRANCH"],
