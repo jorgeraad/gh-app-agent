@@ -133,6 +133,15 @@ ln -sfn <new-app-name> apps/default
 
 Each App's credentials live in its own `apps/<name>/` directory and are independent.
 
+## Using one App from multiple machines
+
+`register-app.py` always creates a *new* App, so don't re-run it on the second machine. Instead, share the existing App's identity (`config.env` + a private key). Two approaches:
+
+- **Separate keys per machine (recommended).** On github.com → Settings → Developer settings → GitHub Apps → your app → Private keys → **Generate a new key**. On machine 2, do the normal Setup steps 1–4, then manually create `apps/<name>/` containing the new `.pem` (`chmod 600`) and a copy of `config.env` from machine 1. Each machine has an independently revocable key.
+- **Shared key.** Copy `apps/<name>/` from machine 1 to machine 2 verbatim. Simpler, but revoking the key kills both.
+
+In both cases, finish with the credential-helper config (Setup step 6) and optionally `ln -sfn <name> apps/default`. Each machine maintains its own `.token-cache.json`; no runtime coordination needed.
+
 ## Contributing
 
 PRs welcome. To work on the scripts:
